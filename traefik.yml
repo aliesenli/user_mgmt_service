@@ -14,7 +14,7 @@ entryPoints:
 certificatesResolvers:
   letsencryptresolver:
     acme:
-      email: placeholder@example.com
+      email: aliriza.esenli@hotmail.com
       storage: /letsencrypt/acme.json
       httpChallenge:
         entryPoint: web
