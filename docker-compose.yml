@@ -2,15 +2,15 @@ services:
   traefik:
     image: traefik:v3.3
     command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
+      - "--configFile=/etc/traefik/traefik.yml"
     ports:
       - "80:80"
+      - "443:443"
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      - letsencrypt:/letsencrypt
     networks:
       - backend-network
 
@@ -42,8 +42,21 @@ services:
       JWT_EXPIRATION_MILLIS: ${JWT_EXPIRATION_MILLIS}
     labels:
       - "traefik.enable=true"
+      # HTTPS router
+      - "traefik.http.routers.app-secure.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.app-secure.entrypoints=websecure"
+      - "traefik.http.routers.app-secure.tls=true"
+      - "traefik.http.routers.app-secure.tls.certresolver=letsencryptresolver"
+      - "traefik.http.routers.app-secure.middlewares=strip-api"
+      # HTTP router — redirect only
       - "traefik.http.routers.app.rule=PathPrefix(`/api`)"
       - "traefik.http.routers.app.entrypoints=web"
+      - "traefik.http.routers.app.middlewares=redirect-to-https"
+      # Middlewares
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+      - "traefik.http.middlewares.strip-api.stripprefix.prefixes=/api"
+      # Service
       - "traefik.http.services.app.loadbalancer.server.port=8080"
     depends_on:
       postgres:
@@ -53,6 +66,7 @@ services:
 
 volumes:
   pgdata:
+  letsencrypt:
 
 networks:
   backend-network:
