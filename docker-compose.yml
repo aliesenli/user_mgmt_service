@@ -43,13 +43,13 @@ services:
     labels:
       - "traefik.enable=true"
       # HTTPS router
-      - "traefik.http.routers.app-secure.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.app-secure.rule=Host(`app.aliesenli.com`) && PathPrefix(`/api`)"
       - "traefik.http.routers.app-secure.entrypoints=websecure"
       - "traefik.http.routers.app-secure.tls=true"
       - "traefik.http.routers.app-secure.tls.certresolver=letsencryptresolver"
       - "traefik.http.routers.app-secure.middlewares=strip-api"
       # HTTP router — redirect only
-      - "traefik.http.routers.app.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.app.rule=Host(`app.aliesenli.com`) && PathPrefix(`/api`)"
       - "traefik.http.routers.app.entrypoints=web"
       - "traefik.http.routers.app.middlewares=redirect-to-https"
       # Middlewares
