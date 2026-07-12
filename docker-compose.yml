@@ -43,13 +43,13 @@ services:
     labels:
       - "traefik.enable=true"
       # HTTPS router
-      - "traefik.http.routers.app-secure.rule=Host(`app.aliesenli.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.app-secure.rule=Host(`app.aliesenli.com`) && PathPrefix(`/api`) && !PathPrefix(`/api/login`) && !PathPrefix(`/api/logout`) && !PathPrefix(`/api/me`)"
       - "traefik.http.routers.app-secure.entrypoints=websecure"
       - "traefik.http.routers.app-secure.tls=true"
       - "traefik.http.routers.app-secure.tls.certresolver=letsencryptresolver"
       - "traefik.http.routers.app-secure.middlewares=strip-api"
       # HTTP router — redirect only
-      - "traefik.http.routers.app.rule=Host(`app.aliesenli.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.app.rule=Host(`app.aliesenli.com`) && PathPrefix(`/api`) && !PathPrefix(`/api/login`) && !PathPrefix(`/api/logout`) && !PathPrefix(`/api/me`)"
       - "traefik.http.routers.app.entrypoints=web"
       - "traefik.http.routers.app.middlewares=redirect-to-https"
       # Middlewares
@@ -61,6 +61,30 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - backend-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    ports:
+      - "3000:3000"
+    labels:
+      - "traefik.enable=true"
+      # HTTPS router
+      - "traefik.http.routers.frontend-secure.rule=Host(`app.aliesenli.com`)"
+      - "traefik.http.routers.frontend-secure.entrypoints=websecure"
+      - "traefik.http.routers.frontend-secure.tls=true"
+      - "traefik.http.routers.frontend-secure.tls.certresolver=letsencryptresolver"
+      # HTTP router — redirect only
+      - "traefik.http.routers.frontend.rule=Host(`app.aliesenli.com`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend.middlewares=redirect-to-https"
+      # Service
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
     networks:
       - backend-network
 
