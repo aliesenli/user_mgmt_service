@@ -1,3 +1,14 @@
+node_modules/
 .env
+.env.local
+.env.*.local
 .gradle/
 build/
+acme.json
+letsencrypt/
+*.patch
+.next/
+frontend/.next/
+frontend/out/
+*.log
+.DS_Store
