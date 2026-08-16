@@ -48,13 +48,7 @@ services:
       - "traefik.http.routers.app-secure.tls=true"
       - "traefik.http.routers.app-secure.tls.certresolver=letsencryptresolver"
       - "traefik.http.routers.app-secure.middlewares=strip-api"
-      # HTTP router — redirect only
-      - "traefik.http.routers.app.rule=Host(`app.aliesenli.com`) && PathPrefix(`/api`) && !PathPrefix(`/api/login`) && !PathPrefix(`/api/logout`) && !PathPrefix(`/api/me`)"
-      - "traefik.http.routers.app.entrypoints=web"
-      - "traefik.http.routers.app.middlewares=redirect-to-https"
       # Middlewares
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
       - "traefik.http.middlewares.strip-api.stripprefix.prefixes=/api"
       # Service
       - "traefik.http.services.app.loadbalancer.server.port=8080"
@@ -79,10 +73,6 @@ services:
       - "traefik.http.routers.frontend-secure.entrypoints=websecure"
       - "traefik.http.routers.frontend-secure.tls=true"
       - "traefik.http.routers.frontend-secure.tls.certresolver=letsencryptresolver"
-      # HTTP router — redirect only
-      - "traefik.http.routers.frontend.rule=Host(`app.aliesenli.com`)"
-      - "traefik.http.routers.frontend.entrypoints=web"
-      - "traefik.http.routers.frontend.middlewares=redirect-to-https"
       # Service
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
     networks:
