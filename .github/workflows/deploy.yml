@@ -16,6 +16,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /opt/user-mgmt-service
+            cd /opt/user_mgmt_service
             git pull origin main
             docker compose up -d --build
