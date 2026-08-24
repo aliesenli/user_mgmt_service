@@ -1,0 +1,14 @@
+{{- $component := "frontend" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $component }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "user-mgmt.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: {{ $component }}
+  ports:
+    - port: {{ .Values.frontend.port }}
+      targetPort: {{ .Values.frontend.port }}

@@ -1,0 +1,46 @@
+namespace: user-mgmt
+
+backend:
+  image:
+    repository: ghcr.io/aliesenli/user-mgmt-backend
+    tag: latest
+  replicas: 1
+  port: 8080
+  readinessProbe:
+    initialDelaySeconds: 90
+    periodSeconds: 10
+    failureThreshold: 6
+
+frontend:
+  image:
+    repository: ghcr.io/aliesenli/user-mgmt-frontend
+    tag: latest
+  replicas: 1
+  port: 3000
+  apiUrl: "http://67.207.73.3/api"
+  readinessProbe:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+
+postgres:
+  image:
+    repository: postgres
+    tag: 16-alpine
+  replicas: 1
+  port: 5432
+  storage: 1Gi
+
+config:
+  springDatasourceUrl: "jdbc:postgresql://postgres:5432/userdb"
+  springJpaHibernateDdlAuto: "update"
+  jwtIssuer: "user-mgmt-service"
+  jwtExpirationMillis: "3600000"
+
+secret:
+  postgresUser: "appuser"
+  postgresPassword: "secret"
+  postgresDb: "userdb"
+  jwtSecret: "change-me-to-a-long-random-string"
+
+ingress:
+  className: nginx

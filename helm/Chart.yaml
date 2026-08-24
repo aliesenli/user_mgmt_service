@@ -1,0 +1,6 @@
+apiVersion: v2
+name: user-mgmt
+description: User management service — Next.js frontend, Spring Boot backend, PostgreSQL
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
