@@ -27,7 +27,9 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/user-mgmt-backend:latest
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/user-mgmt-backend:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/user-mgmt-backend:latest
 
   build-frontend:
     runs-on: ubuntu-latest
@@ -50,36 +52,32 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/user-mgmt-frontend:latest
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/user-mgmt-frontend:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/user-mgmt-frontend:latest
           build-args: |
-            NEXT_PUBLIC_API_URL=http://67.207.73.3/api
+            NEXT_PUBLIC_API_URL=https://app.aliesenli.com/api
 
-  deploy:
+  update-ops:
     runs-on: ubuntu-latest
     needs: [build-backend, build-frontend]
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install doctl
-        uses: digitalocean/action-doctl@v2
+      - name: Checkout ops repo
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          repository: aliesenli/user_mgmt_service_ops
+          token: ${{ secrets.OPS_REPO_TOKEN }}
 
-      - name: Save kubeconfig
-        run: doctl kubernetes cluster kubeconfig save f3a6f31b-2f7a-4daa-af9f-5c761db1d1de
-
-      - name: Apply Kubernetes manifests
+      - name: Update image tags in values.yaml
         run: |
-          kubectl apply -f k8s/namespace.yaml
-          kubectl apply -f k8s/configmap.yaml
-          kubectl apply -f k8s/postgres/
-          kubectl apply -f k8s/backend/
-          kubectl apply -f k8s/frontend/
-          kubectl apply -f k8s/ingress.yaml
+          sed -i "s|tag: .*|tag: ${{ github.sha }}|g" helm/values.yaml
 
-      - name: Restart deployments to pull latest images
+      - name: Commit and push updated tags
         run: |
-          kubectl rollout restart deployment/backend -n user-mgmt
-          kubectl rollout restart deployment/frontend -n user-mgmt
-          kubectl rollout status deployment/backend -n user-mgmt --timeout=120s
-          kubectl rollout status deployment/frontend -n user-mgmt --timeout=120s
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add helm/values.yaml
+          git commit -m "ci: update image tags to ${{ github.sha }}"
+          git push
