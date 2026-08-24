@@ -12,3 +12,4 @@ frontend/.next/
 frontend/out/
 *.log
 .DS_Store
+k8s/secret.yaml
