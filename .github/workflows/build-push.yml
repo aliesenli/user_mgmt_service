@@ -74,9 +74,15 @@ jobs:
           repository: aliesenli/user_mgmt_service_ops
           token: ${{ secrets.OPS_REPO_TOKEN }}
 
+      - name: Install yq
+        run: |
+          wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          chmod +x /usr/local/bin/yq
+
       - name: Update image tags in values.yaml
         run: |
-          sed -i "s|tag: .*|tag: ${{ github.sha }}|g" helm/values.yaml
+          yq e ".backend.image.tag = \"${{ github.sha }}\"" -i helm/values.yaml
+          yq e ".frontend.image.tag = \"${{ github.sha }}\"" -i helm/values.yaml
 
       - name: Commit and push updated tags
         run: |
