@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-mgmt-config
+  namespace: user-mgmt
+  labels:
+    app.kubernetes.io/part-of: user-mgmt-service
+data:
+  # nicht-sensitive Backend-Konfiguration
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/userdb"
+  # WAR: "validate" -> Hibernate prueft nur, erstellt nie Tabellen.
+  # Bei einer frischen PVC/DB ist das Schema leer -> SchemaManagementException.
+  # "update" laesst Hibernate die fehlenden Tabellen beim Start selbst anlegen.
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+  JWT_ISSUER: "user-mgmt-service"
+  JWT_EXPIRATION_MILLIS: "3600000"
+  POSTGRES_DB: "userdb"
+  # nicht-sensitive Frontend-Konfiguration
+  # Hinweis: NEXT_PUBLIC_API_URL wird bei Next.js zur Build-Zeit ins Bundle
+  # kompiliert (Standalone-Output). Der Wert hier dokumentiert die Konfiguration,
+  # eine Aenderung zur Laufzeit wirkt sich erst nach einem Image-Rebuild aus.
+  NEXT_PUBLIC_API_URL: "https://teko.sshzrh.org/api"

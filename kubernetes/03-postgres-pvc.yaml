@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: user-mgmt
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: user-mgmt-service
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  # storageClassName: "" # ggf. auf die im Cluster verfuegbare StorageClass setzen

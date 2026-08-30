@@ -1,0 +1,51 @@
+# KORREKTUR H4 (ersetzt die bisherige 10-ingress.yaml):
+# Die rewrite-target-Annotation gilt bei ingress-nginx fuer ALLE Pfade eines
+# Ingress-Objekts. Mit nur einem Objekt wurden auch alle Frontend-Pfade
+# (/_next/static/..., /login, ...) auf "/" umgeschrieben -> Seite laedt ihre
+# Assets nicht. Loesung: zwei getrennte Ingress-Objekte fuer denselben Host.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: user-mgmt-ingress-api
+  namespace: user-mgmt
+  labels:
+    app.kubernetes.io/part-of: user-mgmt-service
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    # entspricht dem "stripprefix"-Middleware-Verhalten aus der bisherigen
+    # Traefik-Konfiguration: /api/xyz -> /xyz auf dem Backend-Service
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: teko.sshzrh.org
+      http:
+        paths:
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: user-mgmt-ingress
+  namespace: user-mgmt
+  labels:
+    app.kubernetes.io/part-of: user-mgmt-service
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: teko.sshzrh.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
