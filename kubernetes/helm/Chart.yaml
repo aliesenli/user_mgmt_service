@@ -1,0 +1,12 @@
+apiVersion: v2
+name: user-mgmt-service
+description: Helm Chart fuer den User-Management-Service (Next.js Frontend, Spring Boot Backend, PostgreSQL)
+type: application
+version: 0.2.0
+appVersion: "1.0.0"
+keywords:
+  - spring-boot
+  - nextjs
+  - postgresql
+maintainers:
+  - name: aliesenli

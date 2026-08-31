@@ -1,0 +1,15 @@
+{{- if .Values.resourceQuota.enabled }}
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: {{ include "app.fullname" . }}-quota
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  hard:
+    requests.cpu: {{ .Values.resourceQuota.cpuRequests | quote }}
+    requests.memory: {{ .Values.resourceQuota.memoryRequests | quote }}
+    limits.cpu: {{ .Values.resourceQuota.cpuLimits | quote }}
+    limits.memory: {{ .Values.resourceQuota.memoryLimits | quote }}
+{{- end }}

@@ -1,0 +1,48 @@
+# Override-Werte fuer die Staging-Umgebung.
+# Anwendung: helm upgrade --install user-mgmt-staging . -f values.yaml -f values-staging.yaml -n user-mgmt-staging
+# bzw. via ArgoCD Application "user-mgmt-service-staging" (source.helm.valueFiles).
+
+namespace: user-mgmt-staging
+
+backend:
+  replicaCount: 1
+  probes:
+    enabled: true
+  autoscaling:
+    enabled: false
+  podDisruptionBudget:
+    enabled: false
+  topologySpread:
+    enabled: false
+
+frontend:
+  replicaCount: 1
+  probes:
+    enabled: true
+  # KORREKTUR H6: Staging-Frontend muss auf die Staging-API zeigen, nicht auf
+  # die Prod-API. ACHTUNG: NEXT_PUBLIC_API_URL wird beim Frontend-Build ins
+  # Bundle kompiliert (Build-Arg im Dockerfile). Dieser Wert wirkt daher erst,
+  # wenn ein Staging-spezifisches Image mit diesem Build-Arg gebaut wird
+  # (siehe README-Korrekturen.md, Abschnitt H6) - er dokumentiert die korrekte
+  # Ziel-URL und verhindert, dass die ConfigMap die Prod-URL propagiert.
+  env:
+    nextPublicApiUrl: https://staging.app.aliesenli.com/api
+  podDisruptionBudget:
+    enabled: false
+  topologySpread:
+    enabled: false
+
+ingress:
+  host: staging.app.aliesenli.com
+
+# Grosszuegiger, aber verbindlich begrenzter Ressourcenrahmen fuer Staging
+resourceQuota:
+  enabled: true
+  cpuRequests: "1"
+  memoryRequests: 2Gi
+  cpuLimits: "2"
+  memoryLimits: 4Gi
+
+networkPolicy:
+  enabled: true
+  ingressNamespace: ingress-nginx

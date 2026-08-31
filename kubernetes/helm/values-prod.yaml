@@ -1,0 +1,56 @@
+# Override-Werte fuer die Produktiv-Umgebung.
+# Anwendung: helm upgrade --install user-mgmt-prod . -f values.yaml -f values-prod.yaml -n user-mgmt-prod
+# bzw. via ArgoCD Application "user-mgmt-service-prod" (source.helm.valueFiles).
+
+namespace: user-mgmt-prod
+
+backend:
+  replicaCount: 2  # wird bei aktiviertem HPA ignoriert, siehe Aufgabe 6
+  probes:
+    enabled: true
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  topologySpread:
+    enabled: true
+
+frontend:
+  replicaCount: 2
+  probes:
+    enabled: true
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+  topologySpread:
+    enabled: true
+
+ingress:
+  host: app.aliesenli.com
+  tls:
+    enabled: true
+    secretName: app-aliesenli-com-tls
+
+# Strengerer, verbindlicher Ressourcenrahmen fuer Production.
+# KORREKTUR H5: limits.cpu von "4" auf "5" erhoeht. Rechnung bei HPA-Maximum:
+#   Backend  6 x 500m = 3.0 CPU
+#   Frontend 2 x 300m = 0.6 CPU
+#   Postgres 1 x 500m = 0.5 CPU
+#   Summe             = 4.1 CPU  (> alte Quota "4" -> 6. Replica wurde abgelehnt)
+#   + RollingUpdate-Surge-Pod (maxSurge 1, Backend) = +0.5 CPU -> 4.6 CPU
+# Quota "5" laesst HPA-Maximum UND Surge-Pod zu, begrenzt aber weiterhin.
+resourceQuota:
+  enabled: true
+  cpuRequests: "2"
+  memoryRequests: 4Gi
+  cpuLimits: "5"
+  memoryLimits: 8Gi
+
+networkPolicy:
+  enabled: true
+  ingressNamespace: ingress-nginx

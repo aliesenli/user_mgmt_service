@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "app.fullname" . }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+data:
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://{{ include "app.fullname" . }}-postgres:{{ .Values.postgres.service.port }}/{{ .Values.postgres.env.db }}"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: {{ .Values.backend.env.springJpaHibernateDdlAuto | quote }}
+  JWT_ISSUER: {{ .Values.backend.env.jwtIssuer | quote }}
+  JWT_EXPIRATION_MILLIS: {{ .Values.backend.env.jwtExpirationMillis | quote }}
+  POSTGRES_DB: {{ .Values.postgres.env.db | quote }}
+  NEXT_PUBLIC_API_URL: {{ .Values.frontend.env.nextPublicApiUrl | quote }}

@@ -1,0 +1,147 @@
+# Zentrale Konfiguration des Charts. Saemtliche Werte, die sich zwischen
+# Umgebungen unterscheiden koennen, werden hier (bzw. in values-<env>.yaml,
+# siehe Aufgabe 5) definiert - keine Hardcodings in den Templates.
+
+nameOverride: ""
+fullnameOverride: ""
+
+namespace: user-mgmt
+
+backend:
+  image:
+    repository: ghcr.io/aliesenli/user-mgmt-backend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  service:
+    port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    springJpaHibernateDdlAuto: update
+    jwtIssuer: user-mgmt-service
+    jwtExpirationMillis: "3600000"
+  # Probes nutzen die Spring Boot Actuator Health-Groups "liveness"/"readiness".
+  # VORAUSSETZUNG (K2): der Actuator-Patch aus app-repo-patches/ muss im
+  # App-Repo umgesetzt und ein neues Image gebaut sein, sonst schlagen die
+  # Probes fehl und kein Backend-Pod wird ready.
+  probes:
+    enabled: true
+    liveness:
+      path: /actuator/health/liveness
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      failureThreshold: 3
+    readiness:
+      path: /actuator/health/readiness
+      initialDelaySeconds: 15
+      periodSeconds: 5
+      failureThreshold: 3
+  # RollingUpdate-Strategie, siehe Aufgabe 6
+  strategy:
+    maxUnavailable: 0
+    maxSurge: 1
+  # HorizontalPodAutoscaler, siehe Aufgabe 6
+  autoscaling:
+    enabled: false  # ab Aufgabe 6: true (values-prod.yaml)
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  # PodDisruptionBudget, siehe Aufgabe 6
+  podDisruptionBudget:
+    enabled: false  # ab Aufgabe 6: true (values-prod.yaml)
+    minAvailable: 1
+  # Pod Anti-Affinity / Topology Spread, siehe Aufgabe 6
+  topologySpread:
+    enabled: false  # ab Aufgabe 6: true (values-prod.yaml)
+
+frontend:
+  image:
+    repository: ghcr.io/aliesenli/user-mgmt-frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  service:
+    port: 3000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 300m
+      memory: 384Mi
+  env:
+    nextPublicApiUrl: https://teko.sshzrh.org/api
+  probes:
+    enabled: true
+    # TCP-Check auf den benannten Container-Port "http", da kein dedizierter
+    # Health-Endpoint im Next.js Standalone-Server existiert.
+    # (Korrektur: der frueher hier definierte, ungenutzte Wert "port: 3000"
+    # wurde entfernt - das Template nutzt den benannten Port.)
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+  strategy:
+    maxUnavailable: 0
+    maxSurge: 1
+  podDisruptionBudget:
+    enabled: false  # ab Aufgabe 6: true (values-prod.yaml)
+    minAvailable: 1
+  topologySpread:
+    enabled: false  # ab Aufgabe 6: true (values-prod.yaml)
+
+postgres:
+  image:
+    repository: postgres
+    tag: "16-alpine"
+    pullPolicy: IfNotPresent
+  service:
+    port: 5432
+  storage:
+    size: 5Gi
+    storageClassName: ""
+  env:
+    db: userdb
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# ACHTUNG Demo-Werte - Produktiv: via --set-string, Sealed Secrets,
+# External Secrets Operator o.ae. injizieren, nie im Klartext einchecken.
+secrets:
+  postgresUser: appuser
+  postgresPassword: "changeme"
+  springDatasourceUsername: appuser
+  springDatasourcePassword: "changeme"
+  jwtSecret: "change-me-to-a-long-random-string"
+
+ingress:
+  enabled: true
+  className: nginx
+  host: teko.sshzrh.org
+  tls:
+    enabled: false
+    secretName: teko-sshzrh-org-tls
+
+# ResourceQuota pro Namespace, siehe Aufgabe 5
+resourceQuota:
+  enabled: false  # ab Aufgabe 5: true
+  cpuRequests: "2"
+  memoryRequests: 4Gi
+  cpuLimits: "4"
+  memoryLimits: 8Gi
+
+# NetworkPolicy pro Namespace, siehe Aufgabe 5
+networkPolicy:
+  enabled: false  # ab Aufgabe 5: true
+  ingressNamespace: ingress-nginx

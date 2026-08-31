@@ -1,0 +1,64 @@
+{{- if .Values.ingress.enabled }}
+# KORREKTUR H4: Die rewrite-target-Annotation gilt bei ingress-nginx fuer ALLE
+# Pfade eines Ingress-Objekts. Mit nur einem Objekt wurden dadurch auch alle
+# Frontend-Pfade (/_next/..., /login, ...) auf "/" umgeschrieben. Deshalb jetzt
+# zwei getrennte Ingress-Objekte: eines mit Rewrite nur fuer /api, eines ohne
+# Annotation fuer das Frontend. ingress-nginx merged Regeln fuer denselben Host;
+# der laengere /api-Pfad hat Vorrang vor dem Prefix "/".
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "app.fullname" . }}-api
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ include "app.fullname" . }}-backend
+                port:
+                  number: {{ .Values.backend.service.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "app.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "app.fullname" . }}-frontend
+                port:
+                  number: {{ .Values.frontend.service.port }}
+{{- end }}
