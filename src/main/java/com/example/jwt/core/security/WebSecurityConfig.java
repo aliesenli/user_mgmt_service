@@ -44,6 +44,8 @@ public class WebSecurityConfig {
         "/users/login".equals(request.getServletPath()) && HttpMethod.POST.matches(request.getMethod());
     return http
         .authorizeHttpRequests(requests -> requests
+            // Health-Checks (inkl. liveness/readiness) und Prometheus-Scrape ohne Auth; restliche /actuator-Endpoints bleiben geschuetzt
+            .requestMatchers("/actuator/health/**", "/actuator/prometheus").permitAll()
             .requestMatchers(HttpMethod.POST, "/users/login").permitAll()
             .requestMatchers(HttpMethod.POST, "/users/register").permitAll()
             .anyRequest().authenticated())
