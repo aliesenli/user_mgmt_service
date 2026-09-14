@@ -46,6 +46,7 @@ public class WebSecurityConfig {
         .authorizeHttpRequests(requests -> requests
             .requestMatchers(HttpMethod.POST, "/users/login").permitAll()
             .requestMatchers(HttpMethod.POST, "/users/register").permitAll()
+            .requestMatchers("/actuator/health", "/actuator/prometheus").permitAll()
             .anyRequest().authenticated())
         .addFilterAfter(
             new CustomAuthenticationFilter(loginPostMatcher, authenticationManager(), jwtProperties),
