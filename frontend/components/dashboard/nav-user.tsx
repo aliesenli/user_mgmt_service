@@ -37,7 +37,7 @@ export function NavUser({
   const router = useRouter()
 
   const handleLogout = async () => {
-    await fetch("/api/logout", {
+    await fetch("/api/auth-logout", {
       method: "POST",
     })
 

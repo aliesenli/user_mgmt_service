@@ -8,7 +8,7 @@ export default function LoginPage() {
     const router = useRouter();
 
     const handleLogin = async (data:LoginFormValues) => {
-        const res = await fetch("/api/login", {
+        const res = await fetch("/api/auth-login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
