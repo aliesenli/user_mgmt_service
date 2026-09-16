@@ -1,10 +1,12 @@
 package com.example.jwt.domain.user;
 
+import com.example.jwt.domain.module.ModuleClient;
 import com.example.jwt.domain.user.dto.UserDTO;
 import com.example.jwt.domain.user.dto.UserMapper;
 import com.example.jwt.domain.user.dto.UserRegisterDTO;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,10 +29,12 @@ public class UserController {
 
   private final UserService userService;
   private final UserMapper userMapper;
+  private final ModuleClient moduleClient;
 
-  public UserController(UserService userService, UserMapper userMapper) {
+  public UserController(UserService userService, UserMapper userMapper, ModuleClient moduleClient) {
     this.userService = userService;
     this.userMapper = userMapper;
+    this.moduleClient = moduleClient;
   }
 
   @GetMapping("/me")
@@ -69,5 +73,15 @@ public class UserController {
   public ResponseEntity<Void> deleteById(@PathVariable UUID id) {
     userService.deleteById(id);
     return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping("/{userId}/modules/{moduleId}")
+  public ResponseEntity<?> assignModule(@PathVariable UUID userId, @PathVariable UUID moduleId) {
+    userService.findById(userId);
+    if (!moduleClient.isModuleAvailable(moduleId)) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(Map.of("code", "MODULE_NOT_FOUND", "message", "Module " + moduleId + " was not found"));
+    }
+    return ResponseEntity.ok(Map.of("userId", userId, "moduleId", moduleId));
   }
 }

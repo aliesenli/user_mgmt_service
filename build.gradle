@@ -34,6 +34,9 @@ dependencies {
     annotationProcessor group: 'org.mapstruct', name: 'mapstruct-processor', version: '1.6.3'
     annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-configuration-processor', version: '4.1.0-M3'
 
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.3.0'
+    implementation 'org.aspectj:aspectjweaver:1.9.25.1'
+
     testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '4.1.0-M3'
     testImplementation group: 'org.springframework.security', name: 'spring-security-test', version: '7.1.0-M3'
 }
